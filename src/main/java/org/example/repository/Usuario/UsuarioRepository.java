@@ -1,6 +1,6 @@
-package org.example.repository;
+package org.example.repository.Usuario;
 
-import org.example.model.Usuario;
+import org.example.model.entity.Usuario.Usuario;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

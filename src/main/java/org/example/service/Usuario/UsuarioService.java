@@ -1,8 +1,8 @@
-package org.example.service;
+package org.example.service.Usuario;
 
 import lombok.extern.log4j.Log4j2;
-import org.example.model.Usuario;
-import org.example.repository.UsuarioRepository;
+import org.example.model.entity.Usuario.Usuario;
+import org.example.repository.Usuario.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;

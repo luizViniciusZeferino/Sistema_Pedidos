@@ -1,7 +1,7 @@
-package org.example.service;
+package org.example.service.Usuario;
 
-import org.example.model.Usuario;
-import org.example.repository.UsuarioRepository;
+import org.example.model.entity.Usuario.Usuario;
+import org.example.repository.Usuario.UsuarioRepository;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;

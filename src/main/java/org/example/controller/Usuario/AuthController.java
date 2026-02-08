@@ -1,9 +1,9 @@
-package org.example.controller;
+package org.example.controller.Usuario;
 
 import jakarta.validation.Valid;
-import org.example.dto.LoginRequestDTO;
-import org.example.dto.LoginResponseDTO;
-import org.example.service.AuthService;
+import org.example.dto.Usuario.LoginRequestDTO;
+import org.example.dto.Usuario.LoginResponseDTO;
+import org.example.service.Usuario.AuthService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;

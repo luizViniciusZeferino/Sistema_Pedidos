@@ -1,9 +1,9 @@
-package org.example.service;
+package org.example.service.Usuario;
 
-import org.example.dto.LoginRequestDTO;
-import org.example.dto.LoginResponseDTO;
-import org.example.model.Usuario;
-import org.example.repository.UsuarioRepository;
+import org.example.dto.Usuario.LoginRequestDTO;
+import org.example.dto.Usuario.LoginResponseDTO;
+import org.example.model.entity.Usuario.Usuario;
+import org.example.repository.Usuario.UsuarioRepository;
 import org.example.security.JwtUtil;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;

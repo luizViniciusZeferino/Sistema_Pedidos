@@ -1,7 +1,7 @@
-package org.example.controller;
+package org.example.controller.Usuario;
 
-import org.example.model.Usuario;
-import org.example.service.UsuarioService;
+import org.example.model.entity.Usuario.Usuario;
+import org.example.service.Usuario.UsuarioService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
