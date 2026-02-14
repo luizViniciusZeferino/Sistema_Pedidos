@@ -1,7 +1,7 @@
 package org.example.service.Usuario;
 
 import lombok.extern.log4j.Log4j2;
-import org.example.model.entity.Usuario.Usuario;
+import org.example.model.entity.Usuario.UsuarioEntity;
 import org.example.repository.Usuario.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -20,17 +20,17 @@ public class UsuarioService {
     @Autowired
     private BCryptPasswordEncoder passwordEncoder;
 
-    public Usuario criarUsuario(Usuario usuario) {
-        usuario.setSenha(passwordEncoder.encode(usuario.getSenha()));
+    public UsuarioEntity criarUsuario(UsuarioEntity usuarioEntity) {
+        usuarioEntity.setSenha(passwordEncoder.encode(usuarioEntity.getSenha()));
 
-        return usuarioRepository.save(usuario);
+        return usuarioRepository.save(usuarioEntity);
     }
 
-    public List<Usuario> listarUsuarios() {
+    public List<UsuarioEntity> listarUsuarios() {
         return usuarioRepository.findAll();
     }
 
-    public Optional<Usuario> buscarPorEmail(String email) {
+    public Optional<UsuarioEntity> buscarPorEmail(String email) {
         return usuarioRepository.findByEmail(email);
     }
 }

@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import org.example.enums.PedidoStatus;
-import org.example.model.entity.Usuario.Usuario;
+import org.example.model.entity.Usuario.UsuarioEntity;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -13,17 +13,18 @@ import java.util.List;
 @Entity
 @Getter
 @Setter
-public class Pedido {
+@Table(name = "pedido")
+public class PedidoEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne
-    private Usuario usuario;
+    private UsuarioEntity usuarioEntity;
 
     @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL)
-    private List<ItemPedido> itens;
+    private List<ItemPedidoEntity> itens;
 
     @Enumerated(EnumType.STRING)
     private PedidoStatus status;
@@ -31,5 +32,7 @@ public class Pedido {
     private BigDecimal valorTotal;
 
     private LocalDateTime dataCriacao;
+
+    private LocalDateTime dataFinalizacao;
 }
 
