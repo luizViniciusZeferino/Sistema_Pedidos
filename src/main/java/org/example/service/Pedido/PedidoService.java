@@ -1,6 +1,7 @@
 package org.example.service.Pedido;
 
 import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 import org.example.dto.Pedido.ItemPedidoResponseDTO;
 import org.example.dto.Pedido.PedidoResponseDTO;
 import org.example.enums.PedidoStatus;
@@ -13,6 +14,7 @@ import org.example.model.entity.Usuario.UsuarioEntity;
 import org.example.repository.Pedido.PedidoRepository;
 import org.example.repository.Produto.ProdutoRepository;
 import org.example.repository.Usuario.UsuarioRepository;
+import org.example.service.Estoque.EstoqueService;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
@@ -22,19 +24,22 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+
 @Service
 public class PedidoService {
 
     private final PedidoRepository pedidoRepository;
     private final ProdutoRepository produtoRepository;
     private final UsuarioRepository usuarioRepository;
+    private final EstoqueService estoqueService;
 
     public PedidoService(PedidoRepository pedidoRepository,
                          ProdutoRepository produtoRepository,
-                         UsuarioRepository usuarioRepository) {
+                         UsuarioRepository usuarioRepository, EstoqueService estoqueService) {
         this.pedidoRepository = pedidoRepository;
         this.produtoRepository = produtoRepository;
         this.usuarioRepository = usuarioRepository;
+        this.estoqueService = estoqueService;
     }
 
     @Transactional
@@ -43,6 +48,8 @@ public class PedidoService {
 
         UsuarioEntity usuario = usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+
+        estoqueService.validarEstoque(dto.getItens());
 
         PedidoEntity pedido = new PedidoEntity();
         pedido.setUsuarioEntity(usuario);
