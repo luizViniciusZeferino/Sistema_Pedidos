@@ -135,7 +135,8 @@ public class PedidoService {
 
         for (ItemPedidoEntity item : pedido.getItens()) {
             ProdutoEntity produto = item.getProdutoEntity();
-            produto.setEstoque(produto.getEstoque() + item.getQuantidade());
+            Integer quantidade = item.getQuantidade();
+            estoqueService.devolverEstoque(produto,quantidade);
         }
     }
 
@@ -145,9 +146,6 @@ public class PedidoService {
 
         if(pedido.getStatus() != PedidoStatus.CRIADO) {
             throw new RuntimeException("Pedido não pode ser finalizado");
-        } else {
-            pedido.setStatus(PedidoStatus.FINALIZADO);
-            pedido.setDataFinalizacao(LocalDateTime.now());
         }
 
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -160,6 +158,15 @@ public class PedidoService {
         if(!Objects.equals(idUsuarioDonopedido, usuarioLogado.getId())) {
             throw new RuntimeException("Pedido não pertence ao usuário");
         }
+
+        for (ItemPedidoEntity item : pedido.getItens()) {
+            ProdutoEntity produto = item.getProdutoEntity();
+            Integer quantidade = item.getQuantidade();
+            estoqueService.baixarEstoque(produto,quantidade);
+        }
+
+        pedido.setStatus(PedidoStatus.FINALIZADO);
+        pedido.setDataFinalizacao(LocalDateTime.now());
 
         pedidoRepository.save(pedido);
 

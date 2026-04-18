@@ -27,14 +27,20 @@ public class EstoqueService {
         }
     }
 
-    private void baixarEstoque(ProdutoEntity produto, Integer quantidadeSolicitada, Integer estoqueAtual) {
+    public void baixarEstoque(ProdutoEntity produto, Integer quantidadeSolicitada) {
+        Integer estoqueAtual = produto.getEstoque();
+
+        if (estoqueAtual < quantidadeSolicitada || quantidadeSolicitada <= 0) {
+            throw new RuntimeException("Estoque insuficiente");
+        }
+
         Integer novoEstoque = estoqueAtual - quantidadeSolicitada;
         produto.setEstoque(novoEstoque);
 
         produtoRepository.save(produto);
     }
 
-    private void devolverEstoque(ProdutoEntity produto, Integer quantidadeSolicitada) {
+    public void devolverEstoque(ProdutoEntity produto, Integer quantidadeSolicitada) {
         produto.setEstoque(produto.getEstoque() + quantidadeSolicitada);
 
         produtoRepository.save(produto);
