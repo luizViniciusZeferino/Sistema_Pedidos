@@ -25,5 +25,7 @@ public class ItemPedidoEntity {
     private Integer quantidade;
 
     private BigDecimal precoUnitario;
+
+
 }
 

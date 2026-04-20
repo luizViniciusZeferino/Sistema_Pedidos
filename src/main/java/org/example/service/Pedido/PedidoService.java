@@ -42,6 +42,8 @@ public class PedidoService {
         this.estoqueService = estoqueService;
     }
 
+    PedidoEntity pedido = null;
+
     @Transactional
     public PedidoEntity criarPedido(CriarPedidoRequestDTO dto) {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -57,32 +59,25 @@ public class PedidoService {
         pedido.setDataCriacao(LocalDateTime.now());
 
         List<ItemPedidoEntity> itens = new ArrayList<>();
-        BigDecimal total = BigDecimal.ZERO;
 
         for (CriarPedidoItemDTO itemDTO : dto.getItens()) {
             ProdutoEntity produto = produtoRepository.findById(itemDTO.getProdutoId())
                     .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
 
-            if (produto.getEstoque() < itemDTO.getQuantidade()) {
-                throw new RuntimeException("Estoque insuficiente");
-            }
-
-            produto.setEstoque(produto.getEstoque() - itemDTO.getQuantidade());
+            Integer quantidade = itemDTO.getQuantidade();
 
             ItemPedidoEntity item = new ItemPedidoEntity();
             item.setPedido(pedido);
             item.setProdutoEntity(produto);
             item.setQuantidade(itemDTO.getQuantidade());
             item.setPrecoUnitario(produto.getPreco());
-
-            total = total.add(produto.getPreco()
-                    .multiply(BigDecimal.valueOf(itemDTO.getQuantidade())));
+            estoqueService.baixarEstoque(produto, quantidade);
 
             itens.add(item);
         }
 
         pedido.setItens(itens);
-        pedido.setValorTotal(total);
+        pedido.recalcularTotal();
 
         return pedidoRepository.save(pedido);
     }
@@ -124,7 +119,7 @@ public class PedidoService {
 
     @Transactional
     public void cancelarPedido(Long pedidoId) {
-        PedidoEntity pedido = pedidoRepository.findById(pedidoId)
+         pedido = pedidoRepository.findById(pedidoId)
                 .orElseThrow(() -> new RuntimeException("Pedido não encontrado"));
 
         if (pedido.getStatus() == PedidoStatus.CANCELADO || pedido.getStatus() == PedidoStatus.FINALIZADO) {
@@ -141,7 +136,7 @@ public class PedidoService {
     }
 
     public void finalizarPedido(Long pedidoId) {
-        PedidoEntity pedido = pedidoRepository.findById(pedidoId)
+         pedido = pedidoRepository.findById(pedidoId)
                 .orElseThrow(() -> new RuntimeException("Pedido não encontrado"));
 
         if(pedido.getStatus() != PedidoStatus.CRIADO) {
@@ -171,8 +166,5 @@ public class PedidoService {
         pedidoRepository.save(pedido);
 
     }
-
-
-
 }
 

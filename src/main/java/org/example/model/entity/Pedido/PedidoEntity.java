@@ -3,6 +3,7 @@ package org.example.model.entity.Pedido;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.example.dto.Pedido.ItemPedidoResponseDTO;
 import org.example.enums.PedidoStatus;
 import org.example.model.entity.Usuario.UsuarioEntity;
 
@@ -14,6 +15,7 @@ import java.util.List;
 @Getter
 @Setter
 @Table(name = "pedido")
+
 public class PedidoEntity {
 
     @Id
@@ -34,5 +36,17 @@ public class PedidoEntity {
     private LocalDateTime dataCriacao;
 
     private LocalDateTime dataFinalizacao;
+
+    public void recalcularTotal() {
+        BigDecimal valorTotalPedidos = BigDecimal.ZERO;
+        for(ItemPedidoEntity item : itens) {
+            BigDecimal precoItem =  item.getPrecoUnitario();
+            Integer quantidadeItem = item.getQuantidade();
+            BigDecimal valorTotalItens = (precoItem).multiply(BigDecimal.valueOf(quantidadeItem));
+            valorTotalPedidos = valorTotalPedidos.add(valorTotalItens);
+        }
+        this.valorTotal = valorTotalPedidos;
+    }
+
 }
 
