@@ -1,6 +1,7 @@
 package org.example.controller.Pedido;
 
 import org.example.dto.Pedido.CriarPedidoRequestDTO;
+import org.example.dto.Pedido.HistoricoStatusPedidoResponseDTO;
 import org.example.dto.Pedido.PedidoResponseDTO;
 import org.example.model.entity.Pedido.PedidoEntity;
 import org.example.service.Pedido.PedidoService;
@@ -35,5 +36,11 @@ public class PedidoController {
 
     @PostMapping("/{id}/finalizar")
     public void finalizarPedido(@PathVariable Long id) { pedidoService.finalizarPedido(id); }
+
+    @GetMapping("/pedidos/{id}/historico")
+    public List<HistoricoStatusPedidoResponseDTO> historicoPedido(@PathVariable Long id) {
+
+        return pedidoService.listarHistoricoPedido(id);
+    }
 }
 

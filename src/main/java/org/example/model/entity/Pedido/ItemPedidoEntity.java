@@ -26,6 +26,5 @@ public class ItemPedidoEntity {
 
     private BigDecimal precoUnitario;
 
-
 }
 

@@ -1,16 +1,14 @@
 package org.example.service.Pedido;
 
 import jakarta.transaction.Transactional;
-import lombok.RequiredArgsConstructor;
-import org.example.dto.Pedido.ItemPedidoResponseDTO;
-import org.example.dto.Pedido.PedidoResponseDTO;
+import org.example.dto.Pedido.*;
 import org.example.enums.PedidoStatus;
-import org.example.dto.Pedido.CriarPedidoItemDTO;
-import org.example.dto.Pedido.CriarPedidoRequestDTO;
+import org.example.model.entity.Pedido.HistoricoStatusPedidoEntity;
 import org.example.model.entity.Pedido.ItemPedidoEntity;
 import org.example.model.entity.Pedido.PedidoEntity;
 import org.example.model.entity.Pedido.ProdutoEntity;
 import org.example.model.entity.Usuario.UsuarioEntity;
+import org.example.repository.Pedido.HistoricoStatusPedidoRepository;
 import org.example.repository.Pedido.PedidoRepository;
 import org.example.repository.Produto.ProdutoRepository;
 import org.example.repository.Usuario.UsuarioRepository;
@@ -18,7 +16,6 @@ import org.example.service.Estoque.EstoqueService;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,14 +29,16 @@ public class PedidoService {
     private final ProdutoRepository produtoRepository;
     private final UsuarioRepository usuarioRepository;
     private final EstoqueService estoqueService;
+    private final HistoricoStatusPedidoRepository historicoStatusPedidoRepository;
 
     public PedidoService(PedidoRepository pedidoRepository,
                          ProdutoRepository produtoRepository,
-                         UsuarioRepository usuarioRepository, EstoqueService estoqueService) {
+                         UsuarioRepository usuarioRepository, EstoqueService estoqueService, HistoricoStatusPedidoRepository historicoStatusPedidoRepository) {
         this.pedidoRepository = pedidoRepository;
         this.produtoRepository = produtoRepository;
         this.usuarioRepository = usuarioRepository;
         this.estoqueService = estoqueService;
+        this.historicoStatusPedidoRepository = historicoStatusPedidoRepository;
     }
 
     PedidoEntity pedido = null;
@@ -126,13 +125,24 @@ public class PedidoService {
             throw new RuntimeException("Pedido não pode ser cancelado");
         }
 
+        HistoricoStatusPedidoEntity statusPedidoEntity = new HistoricoStatusPedidoEntity();
+        PedidoStatus statusAnterior = pedido.getStatus();
         pedido.setStatus(PedidoStatus.CANCELADO);
+
+        statusPedidoEntity.setStatusNovo(PedidoStatus.CANCELADO);
+        statusPedidoEntity.setStatusAnterior(statusAnterior);
+        statusPedidoEntity.setDataAlteracao(LocalDateTime.now());
+        statusPedidoEntity.setPedido(pedido);
 
         for (ItemPedidoEntity item : pedido.getItens()) {
             ProdutoEntity produto = item.getProdutoEntity();
             Integer quantidade = item.getQuantidade();
             estoqueService.devolverEstoque(produto,quantidade);
         }
+
+        pedidoRepository.save(pedido);
+        historicoStatusPedidoRepository.save(statusPedidoEntity);
+
     }
 
     public void finalizarPedido(Long pedidoId) {
@@ -148,11 +158,21 @@ public class PedidoService {
         UsuarioEntity usuarioLogado = usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
 
-        Long idUsuarioDonopedido = pedido.getUsuarioEntity().getId();
+        Long idUsuarioDonoPedido = pedido.getUsuarioEntity().getId();
 
-        if(!Objects.equals(idUsuarioDonopedido, usuarioLogado.getId())) {
+        if(!Objects.equals(idUsuarioDonoPedido, usuarioLogado.getId())) {
             throw new RuntimeException("Pedido não pertence ao usuário");
         }
+
+        HistoricoStatusPedidoEntity statusPedidoEntity = new HistoricoStatusPedidoEntity();
+        PedidoStatus statusAnterior = pedido.getStatus();
+        pedido.setStatus(PedidoStatus.FINALIZADO);
+
+        statusPedidoEntity.setStatusNovo(PedidoStatus.FINALIZADO);
+        statusPedidoEntity.setStatusAnterior(statusAnterior);
+        statusPedidoEntity.setDataAlteracao(LocalDateTime.now());
+        pedido.setDataFinalizacao(LocalDateTime.now());
+        statusPedidoEntity.setPedido(pedido);
 
         for (ItemPedidoEntity item : pedido.getItens()) {
             ProdutoEntity produto = item.getProdutoEntity();
@@ -160,11 +180,47 @@ public class PedidoService {
             estoqueService.baixarEstoque(produto,quantidade);
         }
 
-        pedido.setStatus(PedidoStatus.FINALIZADO);
-        pedido.setDataFinalizacao(LocalDateTime.now());
-
         pedidoRepository.save(pedido);
+        historicoStatusPedidoRepository.save(statusPedidoEntity);
 
     }
+
+    public List<HistoricoStatusPedidoResponseDTO> listarHistoricoPedido(Long pedidoId) {
+
+        pedido = pedidoRepository.findById(pedidoId)
+                .orElseThrow(() -> new RuntimeException("Pedido não encontrado"));
+
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        UsuarioEntity usuarioLogado = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+
+        Long idUsuarioDonoPedido = pedido.getUsuarioEntity().getId();
+
+        if (!Objects.equals(idUsuarioDonoPedido, usuarioLogado.getId())) {
+            throw new RuntimeException("Pedido não pertence ao usuário");
+        }
+
+        List<HistoricoStatusPedidoEntity> historicos =
+                historicoStatusPedidoRepository.findByPedido(pedido);
+
+        List<HistoricoStatusPedidoResponseDTO> response = new ArrayList<>();
+
+        for (HistoricoStatusPedidoEntity historico : historicos) {
+
+            HistoricoStatusPedidoResponseDTO dto =
+                    new HistoricoStatusPedidoResponseDTO();
+
+            dto.setStatusAnterior(historico.getStatusAnterior());
+            dto.setStatusNovo(historico.getStatusNovo());
+            dto.setDataAlteracao(historico.getDataAlteracao());
+
+            response.add(dto);
+        }
+
+        return response;
+    }
 }
+
+
 
