@@ -38,7 +38,7 @@ public class PedidoService {
     }
 
     @Transactional
-    public PedidoEntity criarPedido(CriarPedidoRequestDTO dto) {
+    public PedidoResponseDTO criarPedido(CriarPedidoRequestDTO dto) {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
 
         UsuarioEntity usuario = usuarioRepository.findByEmail(email)
@@ -77,7 +77,9 @@ public class PedidoService {
         pedido.setItens(itens);
         pedido.setValorTotal(total);
 
-        return pedidoRepository.save(pedido);
+        PedidoEntity pedidoSalvo = pedidoRepository.save(pedido);
+
+        return toResponseDTO(pedidoSalvo);
     }
 
     public List<PedidoResponseDTO> listarMeusPedidos() {

@@ -2,7 +2,6 @@ package org.example.controller.Pedido;
 
 import org.example.dto.Pedido.CriarPedidoRequestDTO;
 import org.example.dto.Pedido.PedidoResponseDTO;
-import org.example.model.entity.Pedido.PedidoEntity;
 import org.example.service.Pedido.PedidoService;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,7 +18,7 @@ public class PedidoController {
     }
 
     @PostMapping
-    public PedidoEntity criarPedido(@RequestBody CriarPedidoRequestDTO dto) {
+    public PedidoResponseDTO criarPedido(@RequestBody CriarPedidoRequestDTO dto) {
         return pedidoService.criarPedido(dto);
     }
 

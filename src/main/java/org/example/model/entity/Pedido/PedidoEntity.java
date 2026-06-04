@@ -34,5 +34,16 @@ public class PedidoEntity {
     private LocalDateTime dataCriacao;
 
     private LocalDateTime dataFinalizacao;
+
+    public void recalcularTotal() {
+        BigDecimal valorTotalPedidos = BigDecimal.ZERO;
+        for(ItemPedidoEntity item : itens) {
+            BigDecimal precoItem =  item.getPrecoUnitario();
+            Integer quantidadeItem = item.getQuantidade();
+            BigDecimal valorTotalItens = (precoItem).multiply(BigDecimal.valueOf(quantidadeItem));
+            valorTotalPedidos = valorTotalPedidos.add(valorTotalItens);
+        }
+        this.valorTotal = valorTotalPedidos;
+    }
 }
 
