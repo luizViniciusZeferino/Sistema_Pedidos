@@ -1,11 +1,11 @@
 package org.example.service.Pedido;
 
 import jakarta.transaction.Transactional;
+import org.example.dto.Pedido.CriarPedidoItemDTO;
+import org.example.dto.Pedido.CriarPedidoRequestDTO;
 import org.example.dto.Pedido.ItemPedidoResponseDTO;
 import org.example.dto.Pedido.PedidoResponseDTO;
 import org.example.enums.PedidoStatus;
-import org.example.dto.Pedido.CriarPedidoItemDTO;
-import org.example.dto.Pedido.CriarPedidoRequestDTO;
 import org.example.model.entity.Pedido.ItemPedidoEntity;
 import org.example.model.entity.Pedido.PedidoEntity;
 import org.example.model.entity.Pedido.ProdutoEntity;
@@ -138,13 +138,6 @@ public class PedidoService {
         PedidoEntity pedido = pedidoRepository.findById(pedidoId)
                 .orElseThrow(() -> new RuntimeException("Pedido não encontrado"));
 
-        if(pedido.getStatus() != PedidoStatus.CRIADO) {
-            throw new RuntimeException("Pedido não pode ser finalizado");
-        } else {
-            pedido.setStatus(PedidoStatus.FINALIZADO);
-            pedido.setDataFinalizacao(LocalDateTime.now());
-        }
-
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
 
         UsuarioEntity usuarioLogado = usuarioRepository.findByEmail(email)
@@ -156,11 +149,14 @@ public class PedidoService {
             throw new RuntimeException("Pedido não pertence ao usuário");
         }
 
+        if(pedido.getStatus() != PedidoStatus.CRIADO) {
+            throw new RuntimeException("Pedido não pode ser finalizado");
+        } else {
+            pedido.setStatus(PedidoStatus.FINALIZADO);
+            pedido.setDataFinalizacao(LocalDateTime.now());
+        }
         pedidoRepository.save(pedido);
 
     }
-
-
-
 }
 
