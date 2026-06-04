@@ -1,6 +1,6 @@
 package org.example.controller.Usuario;
 
-import org.example.model.entity.Usuario.Usuario;
+import org.example.model.entity.Usuario.UsuarioEntity;
 import org.example.service.Usuario.UsuarioService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,17 +21,17 @@ public class UsuarioController {
     private UsuarioService usuarioService;
 
     @PostMapping
-    public Usuario criarUsuario(@RequestBody Usuario usuario) {
-        return usuarioService.criarUsuario(usuario);
+    public UsuarioEntity criarUsuario(@RequestBody UsuarioEntity usuarioEntity) {
+        return usuarioService.criarUsuario(usuarioEntity);
     }
 
     @GetMapping
-    public List<Usuario> listarUsuarios() {
+    public List<UsuarioEntity> listarUsuarios() {
         return usuarioService.listarUsuarios();
     }
 
     @GetMapping("/email/{email}")
-    public Optional<Usuario> buscarPorEmail(@PathVariable String email) {
+    public Optional<UsuarioEntity> buscarPorEmail(@PathVariable String email) {
         return usuarioService.buscarPorEmail(email);
     }
 }

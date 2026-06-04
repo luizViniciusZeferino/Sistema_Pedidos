@@ -1,6 +1,6 @@
 package org.example.service.Usuario;
 
-import org.example.model.entity.Usuario.Usuario;
+import org.example.model.entity.Usuario.UsuarioEntity;
 import org.example.repository.Usuario.UsuarioRepository;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -19,10 +19,10 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        Usuario usuario = usuarioRepository.findByEmail(email)
+        UsuarioEntity usuarioEntity = usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado"));
-        return User.withUsername(usuario.getEmail())
-                .password(usuario.getSenha())
+        return User.withUsername(usuarioEntity.getEmail())
+                .password(usuarioEntity.getSenha())
                 .roles("USER")
                 .build();
     }

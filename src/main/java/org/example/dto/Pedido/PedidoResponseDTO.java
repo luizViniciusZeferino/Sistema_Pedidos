@@ -3,6 +3,7 @@ package org.example.dto.Pedido;
 import lombok.Getter;
 import lombok.Setter;
 import org.example.enums.PedidoStatus;
+import org.example.model.entity.Pedido.ItemPedidoEntity;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -17,5 +18,6 @@ public class PedidoResponseDTO {
     private BigDecimal valorTotal;
     private LocalDateTime dataCriacao;
     private List<ItemPedidoResponseDTO> itens;
+
 }
 
