@@ -134,6 +134,7 @@ public class PedidoService {
         }
     }
 
+    @Transactional
     public void finalizarPedido(Long pedidoId) {
         PedidoEntity pedido = pedidoRepository.findById(pedidoId)
                 .orElseThrow(() -> new RuntimeException("Pedido não encontrado"));
