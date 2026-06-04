@@ -2,7 +2,7 @@ package org.example.controller.Pedido;
 
 import org.example.dto.Pedido.CriarPedidoRequestDTO;
 import org.example.dto.Pedido.PedidoResponseDTO;
-import org.example.model.entity.Pedido.Pedido;
+import org.example.model.entity.Pedido.PedidoEntity;
 import org.example.service.Pedido.PedidoService;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,7 +19,7 @@ public class PedidoController {
     }
 
     @PostMapping
-    public Pedido criarPedido(@RequestBody CriarPedidoRequestDTO dto) {
+    public PedidoEntity criarPedido(@RequestBody CriarPedidoRequestDTO dto) {
         return pedidoService.criarPedido(dto);
     }
 
@@ -32,5 +32,8 @@ public class PedidoController {
     public void cancelarPedido(@PathVariable Long id) {
         pedidoService.cancelarPedido(id);
     }
+
+    @PostMapping("/{id}/finalizar")
+    public void finalizarPedido(@PathVariable Long id) { pedidoService.finalizarPedido(id); }
 }
 

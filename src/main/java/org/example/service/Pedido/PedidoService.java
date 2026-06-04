@@ -1,18 +1,20 @@
 package org.example.service.Pedido;
 
 import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 import org.example.dto.Pedido.ItemPedidoResponseDTO;
 import org.example.dto.Pedido.PedidoResponseDTO;
 import org.example.enums.PedidoStatus;
 import org.example.dto.Pedido.CriarPedidoItemDTO;
 import org.example.dto.Pedido.CriarPedidoRequestDTO;
-import org.example.model.entity.Pedido.ItemPedido;
-import org.example.model.entity.Pedido.Pedido;
-import org.example.model.entity.Pedido.Produto;
-import org.example.model.entity.Usuario.Usuario;
+import org.example.model.entity.Pedido.ItemPedidoEntity;
+import org.example.model.entity.Pedido.PedidoEntity;
+import org.example.model.entity.Pedido.ProdutoEntity;
+import org.example.model.entity.Usuario.UsuarioEntity;
 import org.example.repository.Pedido.PedidoRepository;
 import org.example.repository.Produto.ProdutoRepository;
 import org.example.repository.Usuario.UsuarioRepository;
+import org.example.service.Estoque.EstoqueService;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
@@ -20,6 +22,8 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+
 
 @Service
 public class PedidoService {
@@ -27,54 +31,53 @@ public class PedidoService {
     private final PedidoRepository pedidoRepository;
     private final ProdutoRepository produtoRepository;
     private final UsuarioRepository usuarioRepository;
+    private final EstoqueService estoqueService;
 
     public PedidoService(PedidoRepository pedidoRepository,
                          ProdutoRepository produtoRepository,
-                         UsuarioRepository usuarioRepository) {
+                         UsuarioRepository usuarioRepository, EstoqueService estoqueService) {
         this.pedidoRepository = pedidoRepository;
         this.produtoRepository = produtoRepository;
         this.usuarioRepository = usuarioRepository;
+        this.estoqueService = estoqueService;
     }
 
+    PedidoEntity pedido = null;
+
     @Transactional
-    public Pedido criarPedido(CriarPedidoRequestDTO dto) {
+    public PedidoEntity criarPedido(CriarPedidoRequestDTO dto) {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
 
-        Usuario usuario = usuarioRepository.findByEmail(email)
+        UsuarioEntity usuario = usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
 
-        Pedido pedido = new Pedido();
-        pedido.setUsuario(usuario);
+        estoqueService.validarEstoque(dto.getItens());
+
+        PedidoEntity pedido = new PedidoEntity();
+        pedido.setUsuarioEntity(usuario);
         pedido.setStatus(PedidoStatus.CRIADO);
         pedido.setDataCriacao(LocalDateTime.now());
 
-        List<ItemPedido> itens = new ArrayList<>();
-        BigDecimal total = BigDecimal.ZERO;
+        List<ItemPedidoEntity> itens = new ArrayList<>();
 
         for (CriarPedidoItemDTO itemDTO : dto.getItens()) {
-            Produto produto = produtoRepository.findById(itemDTO.getProdutoId())
+            ProdutoEntity produto = produtoRepository.findById(itemDTO.getProdutoId())
                     .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
 
-            if (produto.getEstoque() < itemDTO.getQuantidade()) {
-                throw new RuntimeException("Estoque insuficiente");
-            }
+            Integer quantidade = itemDTO.getQuantidade();
 
-            produto.setEstoque(produto.getEstoque() - itemDTO.getQuantidade());
-
-            ItemPedido item = new ItemPedido();
+            ItemPedidoEntity item = new ItemPedidoEntity();
             item.setPedido(pedido);
-            item.setProduto(produto);
+            item.setProdutoEntity(produto);
             item.setQuantidade(itemDTO.getQuantidade());
             item.setPrecoUnitario(produto.getPreco());
-
-            total = total.add(produto.getPreco()
-                    .multiply(BigDecimal.valueOf(itemDTO.getQuantidade())));
+            estoqueService.baixarEstoque(produto, quantidade);
 
             itens.add(item);
         }
 
         pedido.setItens(itens);
-        pedido.setValorTotal(total);
+        pedido.recalcularTotal();
 
         return pedidoRepository.save(pedido);
     }
@@ -82,16 +85,16 @@ public class PedidoService {
     public List<PedidoResponseDTO> listarMeusPedidos() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
 
-        Usuario usuario = usuarioRepository.findByEmail(email)
+        UsuarioEntity usuario = usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
 
-        return pedidoRepository.findByUsuarioId(usuario.getId())
+        return pedidoRepository.findByUsuarioEntityId(usuario.getId())
                 .stream()
                 .map(this::toResponseDTO)
                 .toList();
     }
 
-    private PedidoResponseDTO toResponseDTO(Pedido pedido) {
+    private PedidoResponseDTO toResponseDTO(PedidoEntity pedido) {
         PedidoResponseDTO dto = new PedidoResponseDTO();
         dto.setId(pedido.getId());
         dto.setStatus(pedido.getStatus());
@@ -102,8 +105,8 @@ public class PedidoService {
                 .stream()
                 .map(item -> {
                     ItemPedidoResponseDTO itemDTO = new ItemPedidoResponseDTO();
-                    itemDTO.setProdutoId(item.getProduto().getId());
-                    itemDTO.setProdutoNome(item.getProduto().getNome());
+                    itemDTO.setProdutoId(item.getProdutoEntity().getId());
+                    itemDTO.setProdutoNome(item.getProdutoEntity().getNome());
                     itemDTO.setQuantidade(item.getQuantidade());
                     itemDTO.setPrecoUnitario(item.getPrecoUnitario());
                     return itemDTO;
@@ -116,19 +119,52 @@ public class PedidoService {
 
     @Transactional
     public void cancelarPedido(Long pedidoId) {
-        Pedido pedido = pedidoRepository.findById(pedidoId)
+         pedido = pedidoRepository.findById(pedidoId)
                 .orElseThrow(() -> new RuntimeException("Pedido não encontrado"));
 
-        if (pedido.getStatus() != PedidoStatus.CRIADO) {
+        if (pedido.getStatus() == PedidoStatus.CANCELADO || pedido.getStatus() == PedidoStatus.FINALIZADO) {
             throw new RuntimeException("Pedido não pode ser cancelado");
         }
 
         pedido.setStatus(PedidoStatus.CANCELADO);
 
-        for (ItemPedido item : pedido.getItens()) {
-            Produto produto = item.getProduto();
-            produto.setEstoque(produto.getEstoque() + item.getQuantidade());
+        for (ItemPedidoEntity item : pedido.getItens()) {
+            ProdutoEntity produto = item.getProdutoEntity();
+            Integer quantidade = item.getQuantidade();
+            estoqueService.devolverEstoque(produto,quantidade);
         }
+    }
+
+    public void finalizarPedido(Long pedidoId) {
+         pedido = pedidoRepository.findById(pedidoId)
+                .orElseThrow(() -> new RuntimeException("Pedido não encontrado"));
+
+        if(pedido.getStatus() != PedidoStatus.CRIADO) {
+            throw new RuntimeException("Pedido não pode ser finalizado");
+        }
+
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        UsuarioEntity usuarioLogado = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+
+        Long idUsuarioDonopedido = pedido.getUsuarioEntity().getId();
+
+        if(!Objects.equals(idUsuarioDonopedido, usuarioLogado.getId())) {
+            throw new RuntimeException("Pedido não pertence ao usuário");
+        }
+
+        for (ItemPedidoEntity item : pedido.getItens()) {
+            ProdutoEntity produto = item.getProdutoEntity();
+            Integer quantidade = item.getQuantidade();
+            estoqueService.baixarEstoque(produto,quantidade);
+        }
+
+        pedido.setStatus(PedidoStatus.FINALIZADO);
+        pedido.setDataFinalizacao(LocalDateTime.now());
+
+        pedidoRepository.save(pedido);
+
     }
 }
 
