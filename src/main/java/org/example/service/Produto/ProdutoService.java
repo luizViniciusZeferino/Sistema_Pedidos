@@ -2,7 +2,7 @@ package org.example.service.Produto;
 
 import org.example.dto.Produto.ProdutoRequestDTO;
 import org.example.dto.Produto.ProdutoResponseDTO;
-import org.example.model.entity.Pedido.Produto;
+import org.example.model.entity.Pedido.ProdutoEntity;
 import org.example.repository.Produto.ProdutoRepository;
 import org.springframework.stereotype.Service;
 
@@ -20,12 +20,12 @@ public class ProdutoService {
     public ProdutoResponseDTO criarProduto(ProdutoRequestDTO dto) {
         validar(dto);
 
-        Produto produto = new Produto();
-        produto.setNome(dto.getNome());
-        produto.setPreco(dto.getPreco());
-        produto.setEstoque(dto.getEstoque());
+        ProdutoEntity produtoEntity = new ProdutoEntity();
+        produtoEntity.setNome(dto.getNome());
+        produtoEntity.setPreco(dto.getPreco());
+        produtoEntity.setEstoque(dto.getEstoque());
 
-        Produto salvo = produtoRepository.save(produto);
+        ProdutoEntity salvo = produtoRepository.save(produtoEntity);
         return toResponseDTO(salvo);
     }
 
@@ -37,31 +37,31 @@ public class ProdutoService {
     }
 
     public ProdutoResponseDTO buscarPorId(Long id) {
-        Produto produto = produtoRepository.findById(id)
+        ProdutoEntity produtoEntity = produtoRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
 
-        return toResponseDTO(produto);
+        return toResponseDTO(produtoEntity);
     }
 
     public ProdutoResponseDTO atualizarProduto(Long id, ProdutoRequestDTO dto) {
         validar(dto);
 
-        Produto produto = produtoRepository.findById(id)
+        ProdutoEntity produtoEntity = produtoRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
 
-        produto.setNome(dto.getNome());
-        produto.setPreco(dto.getPreco());
-        produto.setEstoque(dto.getEstoque());
+        produtoEntity.setNome(dto.getNome());
+        produtoEntity.setPreco(dto.getPreco());
+        produtoEntity.setEstoque(dto.getEstoque());
 
-        Produto atualizado = produtoRepository.save(produto);
+        ProdutoEntity atualizado = produtoRepository.save(produtoEntity);
         return toResponseDTO(atualizado);
     }
 
     public void deletarProduto(Long id) {
-        Produto produto = produtoRepository.findById(id)
+        ProdutoEntity produtoEntity = produtoRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
 
-        produtoRepository.delete(produto);
+        produtoRepository.delete(produtoEntity);
     }
 
     private void validar(ProdutoRequestDTO dto) {
@@ -73,12 +73,12 @@ public class ProdutoService {
         }
     }
 
-    private ProdutoResponseDTO toResponseDTO(Produto produto) {
+    private ProdutoResponseDTO toResponseDTO(ProdutoEntity produtoEntity) {
         ProdutoResponseDTO dto = new ProdutoResponseDTO();
-        dto.setId(produto.getId());
-        dto.setNome(produto.getNome());
-        dto.setPreco(produto.getPreco());
-        dto.setEstoque(produto.getEstoque());
+        dto.setId(produtoEntity.getId());
+        dto.setNome(produtoEntity.getNome());
+        dto.setPreco(produtoEntity.getPreco());
+        dto.setEstoque(produtoEntity.getEstoque());
         return dto;
     }
 }
