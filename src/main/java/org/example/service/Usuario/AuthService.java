@@ -2,7 +2,7 @@ package org.example.service.Usuario;
 
 import org.example.dto.Usuario.LoginRequestDTO;
 import org.example.dto.Usuario.LoginResponseDTO;
-import org.example.model.entity.Usuario.Usuario;
+import org.example.model.entity.Usuario.UsuarioEntity;
 import org.example.repository.Usuario.UsuarioRepository;
 import org.example.security.JwtUtil;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -27,10 +27,10 @@ public class AuthService {
     public LoginResponseDTO autenticar(LoginRequestDTO loginRequest) {
         authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getSenha()));
 
-        Usuario usuario = usuarioRepository.findByEmail(loginRequest.getEmail())
+        UsuarioEntity usuarioEntity = usuarioRepository.findByEmail(loginRequest.getEmail())
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
 
-        String token = jwtUtil.generateToken(usuario.getEmail());
+        String token = jwtUtil.generateToken(usuarioEntity.getEmail());
 
         return new LoginResponseDTO(token);
     }

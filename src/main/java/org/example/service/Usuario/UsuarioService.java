@@ -1,7 +1,8 @@
 package org.example.service.Usuario;
 
 import lombok.extern.log4j.Log4j2;
-import org.example.model.entity.Usuario.Usuario;
+import org.example.dto.Usuario.UsuarioDTO;
+import org.example.model.entity.Usuario.UsuarioEntity;
 import org.example.repository.Usuario.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -20,17 +21,37 @@ public class UsuarioService {
     @Autowired
     private BCryptPasswordEncoder passwordEncoder;
 
-    public Usuario criarUsuario(Usuario usuario) {
-        usuario.setSenha(passwordEncoder.encode(usuario.getSenha()));
+    public UsuarioDTO criarUsuario(UsuarioEntity usuarioEntity) {
+        usuarioEntity.setSenha(passwordEncoder.encode(usuarioEntity.getSenha()));
 
-        return usuarioRepository.save(usuario);
+        UsuarioEntity usuarioCriado = usuarioRepository.save(usuarioEntity);
+
+        return toResponseDTO(usuarioCriado);
     }
 
-    public List<Usuario> listarUsuarios() {
-        return usuarioRepository.findAll();
+    public List<UsuarioDTO> listarUsuarios() {
+
+        List<UsuarioEntity> listaUsuarios = usuarioRepository.findAll();
+
+        List<UsuarioDTO> listaDTO = listaUsuarios.stream()
+                .map(this::toResponseDTO)
+                .toList();
+        return listaDTO;
     }
 
-    public Optional<Usuario> buscarPorEmail(String email) {
-        return usuarioRepository.findByEmail(email);
+    public Optional<UsuarioDTO> buscarPorEmail(String email) {
+        return usuarioRepository.findByEmail(email)
+                .map(this::toResponseDTO);
+    }
+
+    private UsuarioDTO toResponseDTO(UsuarioEntity usuario) {
+        UsuarioDTO dto = new UsuarioDTO();
+
+        dto.setNome(usuario.getNome());
+        dto.setTelefone(usuario.getTelefone());
+        dto.setEmail(usuario.getEmail());
+
+
+        return dto;
     }
 }

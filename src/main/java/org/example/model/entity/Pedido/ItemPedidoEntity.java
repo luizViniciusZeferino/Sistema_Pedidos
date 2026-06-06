@@ -9,17 +9,19 @@ import java.math.BigDecimal;
 @Entity
 @Getter
 @Setter
-public class ItemPedido {
+@Table(name = "item_pedido")
+public class ItemPedidoEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne
-    private Pedido pedido;
+    private PedidoEntity pedido;
 
     @ManyToOne
-    private Produto produto;
+    @JoinColumn(name = "produto_id")
+    private ProdutoEntity produtoEntity;
 
     private Integer quantidade;
 
