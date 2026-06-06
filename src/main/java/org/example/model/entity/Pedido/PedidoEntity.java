@@ -21,6 +21,7 @@ public class PedidoEntity {
     private Long id;
 
     @ManyToOne
+    @JoinColumn(name = "usuario_id")
     private UsuarioEntity usuarioEntity;
 
     @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL)
